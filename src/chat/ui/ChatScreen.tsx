@@ -149,11 +149,11 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     paddingBottom: 8,
-    paddingHorizontal: 20,
     flexDirection: "row",
     alignItems: "center",
   },
   back: {
+    marginLeft: 20,
     width: 44,
     height: 44,
     alignItems: "center",
