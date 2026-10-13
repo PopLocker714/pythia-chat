@@ -50,6 +50,7 @@ export function ChatScreen({ runtime }: { runtime: ChatRuntime }) {
           <ChatPlanet />
           {composerHeight > 0 ? (
             <FlashList
+              style={styles.messages}
               data={chat.messages}
               keyExtractor={messageKey}
               getItemType={itemType}
@@ -147,7 +148,14 @@ export function ChatScreen({ runtime }: { runtime: ChatRuntime }) {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   content: { flex: 1 },
-  composerOverlay: { position: "absolute", bottom: 0, left: 0, right: 0 },
+  messages: { zIndex: 1 },
+  composerOverlay: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 2,
+  },
   statusShade: { position: "absolute", top: 0, left: 0, right: 0 },
   header: {
     position: "absolute",
