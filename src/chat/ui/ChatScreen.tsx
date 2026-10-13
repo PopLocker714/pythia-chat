@@ -1,5 +1,6 @@
 import { FlashList } from "@shopify/flash-list";
 import { LinearGradient } from "expo-linear-gradient";
+import { useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -32,10 +33,88 @@ function itemType(message: ChatMessage) {
 export function ChatScreen({ runtime }: { runtime: ChatRuntime }) {
   const chat = useChat(runtime);
   const insets = useSafeAreaInsets();
+  const [composerHeight, setComposerHeight] = useState(0);
+  const headerHeight = insets.top + 60;
   return (
     <View style={styles.screen}>
       <ChatBackdrop />
-      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
+      <KeyboardAvoidingView
+        behavior="padding"
+        style={styles.content}
+        automaticOffset
+        keyboardVerticalOffset={-insets.bottom}
+      >
+        <View style={styles.content}>
+          {composerHeight > 0 ? (
+            <FlashList
+              data={chat.messages}
+              keyExtractor={messageKey}
+              getItemType={itemType}
+              maintainVisibleContentPosition={scrollPosition}
+              contentInsetAdjustmentBehavior="never"
+              contentContainerStyle={{
+                paddingHorizontal: 20,
+                paddingTop: headerHeight,
+                paddingBottom: composerHeight + 12,
+              }}
+              scrollIndicatorInsets={{
+                top: headerHeight,
+                bottom: composerHeight,
+              }}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="interactive"
+              ListEmptyComponent={
+                chat.isLoading ? (
+                  <View style={styles.feedback}>
+                    <ActivityIndicator
+                      color={colors.secondary}
+                      accessibilityLabel="Loading messages"
+                    />
+                  </View>
+                ) : chat.isError ? (
+                  <View style={styles.feedback}>
+                    <Text style={styles.feedbackText}>
+                      Couldn't load your conversation.
+                    </Text>
+                    <Pressable
+                      accessibilityRole="button"
+                      onPress={() => chat.reload()}
+                      style={styles.reload}
+                    >
+                      <Text style={styles.feedbackText}>Try again</Text>
+                    </Pressable>
+                  </View>
+                ) : null
+              }
+              renderItem={({ item }) => (
+                <MessageRow
+                  message={item}
+                  canRetry={chat.canRetry}
+                  onRetry={chat.retry}
+                />
+              )}
+            />
+          ) : null}
+          <View
+            pointerEvents="box-none"
+            style={[styles.composerOverlay, { paddingBottom: insets.bottom }]}
+            onLayout={({ nativeEvent }) =>
+              setComposerHeight(nativeEvent.layout.height)
+            }
+          >
+            <MessageComposer canSend={chat.canSend} onSend={chat.send} />
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+      <LinearGradient
+        pointerEvents="none"
+        colors={["rgba(8,10,12,0.95)", "rgba(8,10,12,0)"]}
+        style={[styles.statusShade, { height: insets.top + 8 }]}
+      />
+      <View
+        pointerEvents="box-none"
+        style={[styles.header, { paddingTop: insets.top + 8 }]}
+      >
         <View style={styles.back} accessibilityLabel="Back">
           <GlassSurface
             radius={22}
@@ -48,7 +127,7 @@ export function ChatScreen({ runtime }: { runtime: ChatRuntime }) {
             radius={24}
             fallback={
               <LinearGradient
-                colors={["rgba(255,255,255,0.15)", "rgba(255,255,255,0.02)"]}
+                colors={["rgba(38,40,43,0.94)", "rgba(13,16,20,0.86)"]}
                 style={styles.titleSurface}
               />
             }
@@ -56,66 +135,23 @@ export function ChatScreen({ runtime }: { runtime: ChatRuntime }) {
           <Text style={styles.title}>Chat</Text>
         </View>
       </View>
-      <KeyboardAvoidingView
-        behavior="padding"
-        style={styles.content}
-        automaticOffset
-        keyboardVerticalOffset={-insets.bottom}
-      >
-        {chat.isLoading ? (
-          <View style={styles.feedback}>
-            <ActivityIndicator
-              color={colors.secondary}
-              accessibilityLabel="Loading messages"
-            />
-          </View>
-        ) : null}
-        {chat.isError ? (
-          <View style={styles.feedback}>
-            <Text style={styles.feedbackText}>
-              Couldn't load your conversation.
-            </Text>
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => chat.reload()}
-              style={styles.reload}
-            >
-              <Text style={styles.feedbackText}>Try again</Text>
-            </Pressable>
-          </View>
-        ) : null}
-        <FlashList
-          data={chat.messages}
-          keyExtractor={messageKey}
-          getItemType={itemType}
-          maintainVisibleContentPosition={scrollPosition}
-          contentContainerStyle={styles.messages}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="interactive"
-          renderItem={({ item }) => (
-            <MessageRow
-              message={item}
-              canRetry={chat.canRetry}
-              onRetry={chat.retry}
-            />
-          )}
-        />
-        <View style={{ paddingBottom: insets.bottom }}>
-          <MessageComposer canSend={chat.canSend} onSend={chat.send} />
-        </View>
-      </KeyboardAvoidingView>
     </View>
   );
 }
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   content: { flex: 1 },
+  composerOverlay: { position: "absolute", bottom: 0, left: 0, right: 0 },
+  statusShade: { position: "absolute", top: 0, left: 0, right: 0 },
   header: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
     paddingBottom: 8,
     paddingHorizontal: 20,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(8,10,12,0.6)",
   },
   back: {
     width: 44,
@@ -128,7 +164,7 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border,
-    backgroundColor: "rgba(255,255,255,0.06)",
+    backgroundColor: "rgba(34,37,40,0.9)",
   },
   titlePill: {
     width: 164,
@@ -147,7 +183,6 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   title: { fontFamily: fonts.heading, fontSize: 18, color: colors.text },
-  messages: { paddingHorizontal: 20, paddingBottom: 12 },
   feedback: {
     alignItems: "center",
     justifyContent: "center",
