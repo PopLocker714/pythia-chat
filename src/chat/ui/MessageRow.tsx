@@ -1,17 +1,11 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import type { ChatMessage } from "../model/message";
+import { AssistantMessageRow } from "./AssistantMessageRow";
 import { ChatIcon } from "./ChatIcon";
-import { PythiaMark } from "./PythiaMark";
-import { ThinkingIndicator } from "./ThinkingIndicator";
+import { statusEnter, statusExit } from "./messageTransitions";
 import { colors, fonts } from "./theme";
 import { useMessageAppearance } from "./useMessageAppearance";
-
-const signLabels = {
-  sun: "SUN SIGN",
-  moon: "MOON SIGN",
-  rising: "RISING SIGN",
-};
 
 export function MessageRow({
   message,
@@ -29,57 +23,37 @@ export function MessageRow({
         <View style={styles.bubble}>
           <Text style={styles.body}>{message.text}</Text>
         </View>
-        {message.status === "failed" ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Retry message"
-            disabled={!canRetry}
-            onPress={() => onRetry(message.clientMessageId)}
-            style={styles.retry}
-            hitSlop={8}
-          >
-            <Text style={styles.error}>Not sent</Text>
-            <ChatIcon name="retry" size={16} color={colors.muted} />
-            <Text style={styles.retryLabel}>Retry</Text>
-          </Pressable>
-        ) : message.status === "sending" ? (
-          <Text accessibilityLiveRegion="polite" style={styles.sending}>
-            Sending…
-          </Text>
-        ) : null}
-      </Animated.View>
-    );
-  }
-  if (message.status === "generating") {
-    return (
-      <Animated.View style={appearance}>
-        <ThinkingIndicator />
-      </Animated.View>
-    );
-  }
-  const hasSigns = Boolean(message.signs?.length);
-  return (
-    <Animated.View style={[styles.incoming, appearance]}>
-      {message.signs?.map((sign) => (
-        <View key={sign.kind} style={styles.sign}>
-          <View style={styles.signIcon}>
-            <ChatIcon name={sign.kind} size={16} color={colors.secondary} />
-          </View>
-          <View style={styles.signDescription}>
-            <Text style={styles.signTitle}>
-              <Text style={styles.muted}>{signLabels[sign.kind]} – </Text>
-              {sign.sign.toUpperCase()}
-            </Text>
-            <Text style={styles.caption}>{sign.caption}</Text>
-          </View>
+        <View style={styles.deliveryStatus}>
+          {message.status === "failed" ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Retry message"
+              disabled={!canRetry}
+              onPress={() => onRetry(message.clientMessageId)}
+              style={styles.retry}
+              hitSlop={8}
+            >
+              <Text style={styles.error}>Not sent</Text>
+              <ChatIcon name="retry" size={16} color={colors.muted} />
+              <Text style={styles.retryLabel}>Retry</Text>
+            </Pressable>
+          ) : message.status === "sending" ? (
+            <Animated.Text
+              entering={statusEnter}
+              exiting={statusExit}
+              accessibilityLiveRegion="polite"
+              style={styles.sending}
+            >
+              Sending…
+            </Animated.Text>
+          ) : null}
         </View>
-      ))}
-      <Text style={[styles.body, hasSigns && styles.portraitText]}>
-        {message.text}
-      </Text>
-      <View style={styles.signature}>
-        <PythiaMark />
-      </View>
+      </Animated.View>
+    );
+  }
+  return (
+    <Animated.View style={appearance}>
+      <AssistantMessageRow message={message} />
     </Animated.View>
   );
 }
@@ -91,8 +65,8 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     color: colors.text,
   },
-  incoming: { paddingTop: 12, paddingBottom: 16 },
-  outgoing: { alignItems: "flex-end", paddingVertical: 16 },
+  outgoing: { alignItems: "flex-end", paddingTop: 16 },
+  deliveryStatus: { height: 36, alignItems: "flex-end" },
   bubble: {
     backgroundColor: colors.bubble,
     borderRadius: 28,
@@ -114,23 +88,5 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: colors.secondary,
     paddingTop: 8,
-  },
-  muted: { color: colors.muted },
-  portraitText: { color: colors.secondary, marginTop: 16 },
-  signature: { marginTop: 24, marginLeft: -4 },
-  sign: { flexDirection: "row", gap: 8, paddingBottom: 12 },
-  signIcon: { paddingTop: 6 },
-  signDescription: { flex: 1 },
-  signTitle: {
-    fontFamily: fonts.heading,
-    fontSize: 16,
-    lineHeight: 22,
-    color: colors.text,
-  },
-  caption: {
-    fontFamily: fonts.body,
-    fontSize: 12,
-    lineHeight: 16,
-    color: colors.secondary,
   },
 });

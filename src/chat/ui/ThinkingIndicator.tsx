@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text } from "react-native";
 import Animated, {
   cancelAnimation,
   useAnimatedStyle,
@@ -10,7 +10,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from "react-native-reanimated";
-import { PythiaMark } from "./PythiaMark";
+import { statusEnter, statusExit } from "./messageTransitions";
 import { colors, fonts } from "./theme";
 
 function ThinkingDot({ delay }: { delay: number }) {
@@ -37,30 +37,23 @@ function ThinkingDot({ delay }: { delay: number }) {
 
 export function ThinkingIndicator() {
   return (
-    <View
-      style={styles.container}
+    <Animated.View
+      entering={statusEnter}
+      exiting={statusExit}
+      style={styles.caption}
       accessible
       accessibilityLabel="Pythia is thinking"
       accessibilityLiveRegion="polite"
     >
-      <PythiaMark />
-      <View style={styles.caption}>
-        <Text style={styles.label}>Pythia is thinking</Text>
-        <ThinkingDot delay={0} />
-        <ThinkingDot delay={160} />
-        <ThinkingDot delay={320} />
-      </View>
-    </View>
+      <Text style={styles.label}>Pythia is thinking</Text>
+      <ThinkingDot delay={0} />
+      <ThinkingDot delay={160} />
+      <ThinkingDot delay={320} />
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingVertical: 12,
-  },
   caption: { flexDirection: "row", alignItems: "baseline" },
   label: {
     fontFamily: fonts.body,

@@ -10,24 +10,17 @@ import { type ChatMessage, messageKey } from "../model/message";
 export function useMessageAppearance(message: ChatMessage) {
   const key = messageKey(message);
   const status = message.status;
-  const previous = useRef<{
-    key: string;
-    status: ChatMessage["status"];
-  } | null>(null);
+  const previousKey = useRef<string | null>(null);
   const opacity = useSharedValue(1);
 
   useLayoutEffect(() => {
     const isNewPendingMessage =
-      previous.current?.key !== key &&
+      previousKey.current !== key &&
       (status === "sending" || status === "generating");
-    const replyBecameReady =
-      previous.current?.key === key &&
-      previous.current.status === "generating" &&
-      status === "done";
-    previous.current = { key, status };
+    previousKey.current = key;
 
     // Recycled history rows must be immediately visible, without replaying a fade.
-    opacity.value = isNewPendingMessage || replyBecameReady ? 0 : 1;
+    opacity.value = isNewPendingMessage ? 0 : 1;
     opacity.value = withTiming(1, { duration: 240 });
     return () => cancelAnimation(opacity);
   }, [key, status, opacity]);
