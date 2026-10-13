@@ -1,8 +1,11 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import Animated from "react-native-reanimated";
 import type { ChatMessage } from "../model/message";
 import { ChatIcon } from "./ChatIcon";
 import { PythiaMark } from "./PythiaMark";
+import { ThinkingIndicator } from "./ThinkingIndicator";
 import { colors, fonts } from "./theme";
+import { useMessageAppearance } from "./useMessageAppearance";
 
 const signLabels = {
   sun: "SUN SIGN",
@@ -19,9 +22,10 @@ export function MessageRow({
   canRetry: boolean;
   onRetry(id: string): boolean;
 }) {
+  const appearance = useMessageAppearance(message);
   if ("clientMessageId" in message || message.role === "user") {
     return (
-      <View style={styles.outgoing}>
+      <Animated.View style={[styles.outgoing, appearance]}>
         <View style={styles.bubble}>
           <Text style={styles.body}>{message.text}</Text>
         </View>
@@ -43,22 +47,19 @@ export function MessageRow({
             Sending…
           </Text>
         ) : null}
-      </View>
+      </Animated.View>
     );
   }
   if (message.status === "generating") {
     return (
-      <View style={styles.thinking} accessibilityLiveRegion="polite">
-        <PythiaMark />
-        <Text style={[styles.body, styles.secondary]}>
-          Pythia is thinking...
-        </Text>
-      </View>
+      <Animated.View style={appearance}>
+        <ThinkingIndicator />
+      </Animated.View>
     );
   }
   const hasSigns = Boolean(message.signs?.length);
   return (
-    <View style={styles.incoming}>
+    <Animated.View style={[styles.incoming, appearance]}>
       {message.signs?.map((sign) => (
         <View key={sign.kind} style={styles.sign}>
           <View style={styles.signIcon}>
@@ -79,7 +80,7 @@ export function MessageRow({
       <View style={styles.signature}>
         <PythiaMark />
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -114,13 +115,6 @@ const styles = StyleSheet.create({
     color: colors.secondary,
     paddingTop: 8,
   },
-  thinking: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingVertical: 12,
-  },
-  secondary: { color: colors.secondary },
   muted: { color: colors.muted },
   portraitText: { color: colors.secondary, marginTop: 16 },
   signature: { marginTop: 24, marginLeft: -4 },

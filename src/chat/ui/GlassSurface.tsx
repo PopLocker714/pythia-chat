@@ -61,6 +61,7 @@ export function GlassSurface({
         <GlassView
           style={[StyleSheet.absoluteFill, { borderRadius: radius }]}
           glassEffectStyle="regular"
+          tintColor="rgba(17,21,27,0.5)"
           colorScheme="dark"
         />
       ) : (

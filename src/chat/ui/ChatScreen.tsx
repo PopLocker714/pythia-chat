@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
+import { useReducedMotion } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { type ChatMessage, messageKey } from "../model/message";
 import type { ChatRuntime } from "../model/runtime";
@@ -23,7 +24,6 @@ import { colors, fonts } from "./theme";
 const scrollPosition = {
   startRenderingFromBottom: true,
   autoscrollToBottomThreshold: 0.15,
-  animateAutoScrollToBottom: false,
 };
 function itemType(message: ChatMessage) {
   if ("clientMessageId" in message || message.role === "user") return "user";
@@ -33,6 +33,7 @@ function itemType(message: ChatMessage) {
 export function ChatScreen({ runtime }: { runtime: ChatRuntime }) {
   const chat = useChat(runtime);
   const insets = useSafeAreaInsets();
+  const reduceMotion = useReducedMotion();
   const [composerHeight, setComposerHeight] = useState(0);
   const headerHeight = insets.top + 60;
   return (
@@ -50,7 +51,10 @@ export function ChatScreen({ runtime }: { runtime: ChatRuntime }) {
               data={chat.messages}
               keyExtractor={messageKey}
               getItemType={itemType}
-              maintainVisibleContentPosition={scrollPosition}
+              maintainVisibleContentPosition={{
+                ...scrollPosition,
+                animateAutoScrollToBottom: !reduceMotion,
+              }}
               contentInsetAdjustmentBehavior="never"
               contentContainerStyle={{
                 paddingHorizontal: 20,

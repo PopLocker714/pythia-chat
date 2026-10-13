@@ -1,5 +1,5 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Pressable, StyleSheet, TextInput, View } from "react-native";
 import { MAX_MESSAGE_LENGTH } from "../model/message";
 import { ChatIcon } from "./ChatIcon";
@@ -14,12 +14,17 @@ export function MessageComposer({
   onSend(text: string): boolean;
 }) {
   const [text, setText] = useState("");
+  const input = useRef<TextInput>(null);
   const disabled = !canSend || text.trim().length === 0;
   function send() {
     if (onSend(text)) setText("");
   }
   return (
-    <View style={styles.border}>
+    <Pressable
+      accessible={false}
+      onPress={() => input.current?.focus()}
+      style={styles.border}
+    >
       <GlassSurface
         radius={28}
         fallback={
@@ -39,6 +44,7 @@ export function MessageComposer({
       />
       <View style={styles.composer}>
         <TextInput
+          ref={input}
           accessibilityLabel="Message"
           testID="message-input"
           value={text}
@@ -60,7 +66,10 @@ export function MessageComposer({
             accessibilityState={{ disabled }}
             testID="send-message"
             disabled={disabled}
-            onPress={send}
+            onPress={(event) => {
+              event.stopPropagation();
+              send();
+            }}
             hitSlop={8}
             style={({ pressed }) => [
               styles.send,
@@ -76,7 +85,7 @@ export function MessageComposer({
           </Pressable>
         </View>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
