@@ -1,4 +1,9 @@
-import { StyleSheet, View } from "react-native";
+import {
+  Dimensions,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import Svg, {
   Circle,
   Defs,
@@ -18,6 +23,9 @@ const stars = Array.from({ length: 180 }, (_, index) => ({
 }));
 
 export function ChatBackdrop() {
+  const { width } = useWindowDimensions();
+  // Android can shrink the app window for the IME. Keep the artwork screen-high.
+  const height = Dimensions.get("screen").height;
   return (
     <View
       pointerEvents="none"
@@ -25,8 +33,8 @@ export function ChatBackdrop() {
       accessible={false}
     >
       <Svg
-        width="100%"
-        height="100%"
+        width={width}
+        height={height}
         viewBox="0 0 390 844"
         preserveAspectRatio="xMidYMax slice"
       >

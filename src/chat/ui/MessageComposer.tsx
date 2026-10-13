@@ -52,6 +52,7 @@ export function MessageComposer({
           placeholder="Ask the stars..."
           placeholderTextColor={colors.muted}
           multiline
+          keyboardAppearance="dark"
           maxLength={MAX_MESSAGE_LENGTH}
           style={styles.input}
           selectionColor={colors.secondary}
