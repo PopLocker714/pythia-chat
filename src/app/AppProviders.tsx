@@ -24,7 +24,12 @@ export function AppProviders({ children }: PropsWithChildren) {
   return (
     <Provider store={chat.store}>
       <SafeAreaProvider>
-        <KeyboardProvider preload={false}>
+        <KeyboardProvider
+          preload={false}
+          statusBarTranslucent
+          navigationBarTranslucent
+          preserveEdgeToEdge
+        >
           <ChatLifecycle />
           {children}
         </KeyboardProvider>
