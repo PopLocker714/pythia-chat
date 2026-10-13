@@ -212,6 +212,37 @@ describe("chat protocol through RTK Query and HTTP", () => {
     expect(chat.controller.send("Hello")).toBe(false);
   });
 
+  test("aborts an in-flight poll and resumes without applying its late response", async () => {
+    let polls = 0;
+    let releaseFirst: (() => void) | undefined;
+    const firstResponse = new Promise<void>((resolve) => {
+      releaseFirst = resolve;
+    });
+    const chat = await setup(async (request) => {
+      if (new URL(request.url).pathname === "/messages")
+        return json({ messages: [portrait, user, reply] });
+      polls++;
+      if (polls === 1) {
+        await firstResponse;
+        return json({ message: reply }, 200, "30");
+      }
+      return json({ message: doneReply });
+    });
+    chat.clock.advance(3000);
+    await eventually(() => polls === 1);
+    chat.controller.stop();
+    await Bun.sleep(10);
+    chat.controller.start();
+    await eventually(() => chat.messages().at(-1)?.status === "done");
+    releaseFirst?.();
+    await Bun.sleep(10);
+    expect(chat.messages().at(-1)).toEqual(doneReply);
+    expect(polls).toBe(2);
+    chat.clock.advance(60_000);
+    await Bun.sleep(10);
+    expect(polls).toBe(2);
+  });
+
   test("keeps stable row identities and references across a 10,000-message history", async () => {
     const history = Array.from({ length: 10_000 }, (_, i) => ({
       ...portrait,
