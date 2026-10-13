@@ -16,6 +16,7 @@ import type { ChatRuntime } from "../model/runtime";
 import { useChat } from "../model/useChat";
 import { ChatBackdrop } from "./ChatBackdrop";
 import { ChatIcon } from "./ChatIcon";
+import { ChatPlanet } from "./ChatPlanet";
 import { GlassSurface } from "./GlassSurface";
 import { MessageComposer } from "./MessageComposer";
 import { MessageRow } from "./MessageRow";
@@ -46,6 +47,7 @@ export function ChatScreen({ runtime }: { runtime: ChatRuntime }) {
         keyboardVerticalOffset={-insets.bottom}
       >
         <View style={styles.content}>
+          <ChatPlanet />
           {composerHeight > 0 ? (
             <FlashList
               data={chat.messages}

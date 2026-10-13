@@ -7,9 +7,7 @@ import {
 import Svg, {
   Circle,
   Defs,
-  Ellipse,
   LinearGradient,
-  RadialGradient,
   Rect,
   Stop,
 } from "react-native-svg";
@@ -24,7 +22,6 @@ const stars = Array.from({ length: 180 }, (_, index) => ({
 
 export function ChatBackdrop() {
   const { width } = useWindowDimensions();
-  // Android can shrink the app window for the IME. Keep the artwork screen-high.
   const height = Dimensions.get("screen").height;
   return (
     <View
@@ -44,11 +41,6 @@ export function ChatBackdrop() {
             <Stop offset="0.6" stopColor="#0B0F13" />
             <Stop offset="1" stopColor="#222A34" />
           </LinearGradient>
-          <RadialGradient id="planet" cx="38%" cy="20%">
-            <Stop offset="0" stopColor="#708091" stopOpacity={0.65} />
-            <Stop offset="0.5" stopColor="#29323F" stopOpacity={0.7} />
-            <Stop offset="1" stopColor="#080C12" />
-          </RadialGradient>
         </Defs>
         <Rect width={390} height={844} fill="url(#night)" />
         {stars.map((star) => (
@@ -61,37 +53,6 @@ export function ChatBackdrop() {
             fill="white"
           />
         ))}
-        <Ellipse
-          cx={205}
-          cy={840}
-          rx={110}
-          ry={117}
-          fill="url(#planet)"
-          stroke="#84919E"
-          strokeOpacity={0.25}
-        />
-        <Ellipse
-          cx={205}
-          cy={840}
-          rx={150}
-          ry={68}
-          fill="none"
-          stroke="#B9C3C8"
-          strokeOpacity={0.18}
-          rotation={-28}
-          origin="205,840"
-        />
-        <Ellipse
-          cx={205}
-          cy={840}
-          rx={116}
-          ry={135}
-          fill="none"
-          stroke="#B9C3C8"
-          strokeOpacity={0.18}
-          rotation={18}
-          origin="205,840"
-        />
       </Svg>
     </View>
   );
