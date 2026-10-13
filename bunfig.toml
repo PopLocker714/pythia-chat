@@ -1,0 +1,4 @@
+[install]
+# Worklets' Babel plugin and React declarations require hoisted dependencies.
+linker = "hoisted"
+globalStore = false

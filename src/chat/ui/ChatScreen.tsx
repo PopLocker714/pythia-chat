@@ -1,6 +1,7 @@
 import { FlashList } from "@shopify/flash-list";
+import { BlurTargetView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -36,10 +37,10 @@ export function ChatScreen({ runtime }: { runtime: ChatRuntime }) {
   const insets = useSafeAreaInsets();
   const reduceMotion = useReducedMotion();
   const [composerHeight, setComposerHeight] = useState(0);
+  const blurTarget = useRef<View>(null);
   const headerHeight = insets.top + 60;
   return (
     <View style={styles.screen}>
-      <ChatBackdrop />
       <KeyboardAvoidingView
         behavior="padding"
         style={styles.content}
@@ -47,61 +48,64 @@ export function ChatScreen({ runtime }: { runtime: ChatRuntime }) {
         keyboardVerticalOffset={-insets.bottom}
       >
         <View style={styles.content}>
-          <ChatPlanet />
-          {composerHeight > 0 ? (
-            <FlashList
-              style={styles.messages}
-              data={chat.messages}
-              keyExtractor={messageKey}
-              getItemType={itemType}
-              maintainVisibleContentPosition={{
-                ...scrollPosition,
-                animateAutoScrollToBottom: !reduceMotion,
-              }}
-              contentInsetAdjustmentBehavior="never"
-              contentContainerStyle={{
-                paddingHorizontal: 20,
-                paddingTop: headerHeight,
-                paddingBottom: composerHeight + 12,
-              }}
-              scrollIndicatorInsets={{
-                top: headerHeight,
-                bottom: composerHeight,
-              }}
-              keyboardShouldPersistTaps="handled"
-              keyboardDismissMode="interactive"
-              ListEmptyComponent={
-                chat.isLoading ? (
-                  <View style={styles.feedback}>
-                    <ActivityIndicator
-                      color={colors.secondary}
-                      accessibilityLabel="Loading messages"
-                    />
-                  </View>
-                ) : chat.isError ? (
-                  <View style={styles.feedback}>
-                    <Text style={styles.feedbackText}>
-                      Couldn't load your conversation.
-                    </Text>
-                    <Pressable
-                      accessibilityRole="button"
-                      onPress={() => chat.reload()}
-                      style={styles.reload}
-                    >
-                      <Text style={styles.feedbackText}>Try again</Text>
-                    </Pressable>
-                  </View>
-                ) : null
-              }
-              renderItem={({ item }) => (
-                <MessageRow
-                  message={item}
-                  canRetry={chat.canRetry}
-                  onRetry={chat.retry}
-                />
-              )}
-            />
-          ) : null}
+          <BlurTargetView ref={blurTarget} style={styles.content}>
+            <ChatBackdrop />
+            <ChatPlanet />
+            {composerHeight > 0 ? (
+              <FlashList
+                style={styles.messages}
+                data={chat.messages}
+                keyExtractor={messageKey}
+                getItemType={itemType}
+                maintainVisibleContentPosition={{
+                  ...scrollPosition,
+                  animateAutoScrollToBottom: !reduceMotion,
+                }}
+                contentInsetAdjustmentBehavior="never"
+                contentContainerStyle={{
+                  paddingHorizontal: 20,
+                  paddingTop: headerHeight,
+                  paddingBottom: composerHeight + 12,
+                }}
+                scrollIndicatorInsets={{
+                  top: headerHeight,
+                  bottom: composerHeight,
+                }}
+                keyboardShouldPersistTaps="handled"
+                keyboardDismissMode="interactive"
+                ListEmptyComponent={
+                  chat.isLoading ? (
+                    <View style={styles.feedback}>
+                      <ActivityIndicator
+                        color={colors.secondary}
+                        accessibilityLabel="Loading messages"
+                      />
+                    </View>
+                  ) : chat.isError ? (
+                    <View style={styles.feedback}>
+                      <Text style={styles.feedbackText}>
+                        Couldn't load your conversation.
+                      </Text>
+                      <Pressable
+                        accessibilityRole="button"
+                        onPress={() => chat.reload()}
+                        style={styles.reload}
+                      >
+                        <Text style={styles.feedbackText}>Try again</Text>
+                      </Pressable>
+                    </View>
+                  ) : null
+                }
+                renderItem={({ item }) => (
+                  <MessageRow
+                    message={item}
+                    canRetry={chat.canRetry}
+                    onRetry={chat.retry}
+                  />
+                )}
+              />
+            ) : null}
+          </BlurTargetView>
           <View
             pointerEvents="box-none"
             style={[styles.composerOverlay, { paddingBottom: insets.bottom }]}
@@ -109,7 +113,11 @@ export function ChatScreen({ runtime }: { runtime: ChatRuntime }) {
               setComposerHeight(nativeEvent.layout.height)
             }
           >
-            <MessageComposer canSend={chat.canSend} onSend={chat.send} />
+            <MessageComposer
+              canSend={chat.canSend}
+              onSend={chat.send}
+              blurTarget={blurTarget}
+            />
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -123,22 +131,11 @@ export function ChatScreen({ runtime }: { runtime: ChatRuntime }) {
         style={[styles.header, { paddingTop: insets.top + 8 }]}
       >
         <View style={styles.back} accessibilityLabel="Back">
-          <GlassSurface
-            radius={22}
-            fallback={<View style={styles.backSurface} />}
-          />
+          <GlassSurface radius={22} blurTarget={blurTarget} />
           <ChatIcon name="back" />
         </View>
         <View style={styles.titlePill}>
-          <GlassSurface
-            radius={24}
-            fallback={
-              <LinearGradient
-                colors={["rgba(38,40,43,0.94)", "rgba(13,16,20,0.86)"]}
-                style={styles.titleSurface}
-              />
-            }
-          />
+          <GlassSurface radius={24} blurTarget={blurTarget} />
           <Text style={styles.title}>Chat</Text>
         </View>
       </View>
@@ -173,13 +170,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  backSurface: {
-    ...StyleSheet.absoluteFill,
-    borderRadius: 22,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
-    backgroundColor: "rgba(34,37,40,0.9)",
-  },
   titlePill: {
     width: 164,
     height: 48,
@@ -189,12 +179,6 @@ const styles = StyleSheet.create({
     bottom: 6,
     left: "50%",
     marginLeft: -82,
-  },
-  titleSurface: {
-    ...StyleSheet.absoluteFill,
-    borderRadius: 24,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
   },
   title: { fontFamily: fonts.heading, fontSize: 18, color: colors.text },
   feedback: {

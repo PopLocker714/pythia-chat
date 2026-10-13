@@ -1,5 +1,4 @@
-import { LinearGradient } from "expo-linear-gradient";
-import { useRef, useState } from "react";
+import { type RefObject, useRef, useState } from "react";
 import { Pressable, StyleSheet, TextInput, View } from "react-native";
 import { MAX_MESSAGE_LENGTH } from "../model/message";
 import { ChatIcon } from "./ChatIcon";
@@ -9,9 +8,11 @@ import { colors, fonts } from "./theme";
 export function MessageComposer({
   canSend,
   onSend,
+  blurTarget,
 }: {
   canSend: boolean;
   onSend(text: string): boolean;
+  blurTarget: RefObject<View | null>;
 }) {
   const [text, setText] = useState("");
   const input = useRef<TextInput>(null);
@@ -25,23 +26,7 @@ export function MessageComposer({
       onPress={() => input.current?.focus()}
       style={styles.border}
     >
-      <GlassSurface
-        radius={28}
-        fallback={
-          <LinearGradient
-            colors={[
-              "rgba(185,195,200,0.75)",
-              "rgba(185,195,200,0.06)",
-              "rgba(185,195,200,0.35)",
-            ]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.fallbackBorder}
-          >
-            <View style={styles.fallbackFill} />
-          </LinearGradient>
-        }
-      />
+      <GlassSurface radius={28} blurTarget={blurTarget} />
       <View style={styles.composer}>
         <TextInput
           ref={input}
@@ -102,16 +87,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 10,
-  },
-  fallbackBorder: {
-    ...StyleSheet.absoluteFill,
-    borderRadius: 28,
-    padding: StyleSheet.hairlineWidth,
-  },
-  fallbackFill: {
-    flex: 1,
-    borderRadius: 28,
-    backgroundColor: "rgba(17,21,27,0.92)",
   },
   input: {
     fontFamily: fonts.body,
